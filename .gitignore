@@ -1,0 +1,14 @@
+
+*.class
+*.mp4
+
+# Package Files #
+*.war
+*.ear
+*.pyc
+
+# Eclipse Files $
+.metadata
+.metadata/*
+*.csv
+*.arff
