@@ -52,8 +52,12 @@ def plot_sample(x, y, axis):
     axis.imshow(img, cmap='gray')
     axis.scatter(y[0::2] * 48 + 48, y[1::2] * 48 + 48, marker='x', s=10)
 
-X, y = load()
-print("X.shape == {}; X.min == {:.3f}; X.max == {:.3f}".format(
-    X.shape, X.min(), X.max()))
-print("y.shape == {}; y.min == {:.3f}; y.max == {:.3f}".format(
-    y.shape, y.min(), y.max()))
+def main():
+    X, y = load()
+    print("X.shape == {}; X.min == {:.3f}; X.max == {:.3f}".format(
+        X.shape, X.min(), X.max()))
+    print("y.shape == {}; y.min == {:.3f}; y.max == {:.3f}".format(
+        y.shape, y.min(), y.max()))
+
+if __name__ == "__main__":
+    main()
