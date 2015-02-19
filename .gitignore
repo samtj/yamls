@@ -1,18 +1,27 @@
-
+# Java Files #
 *.class
-*.mp4
 
 # Package Files #
 *.war
 *.ear
+
+# Python Files #
 *.pyc
 
 # Eclipse Files $
 .metadata
 .metadata/*
-*.csv
-*.arff
-*.jpg
-*.png
 *.pydevproject
 *.project
+
+# Data Files #
+*.csv
+*.arff
+*.mp4
+
+# Images #
+*.jpg
+*.png
+
+# State #
+*.pickle

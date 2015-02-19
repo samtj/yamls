@@ -2,16 +2,25 @@ from lasagne import layers
 from lasagne.updates import nesterov_momentum
 from nolearn.lasagne import NeuralNet
 import matplotlib.pyplot as pyplot
-import prepare
+from facial_keypoint import helper
 import numpy as np
+import os.path
+import cPickle as pickle
 
-#X, y = prepare.load()
+#X, y = helper.load()
 #print("X.shape == {}; X.min == {:.3f}; X.max == {:.3f}".format(
 #    X.shape, X.min(), X.max()))
 #print("y.shape == {}; y.min == {:.3f}; y.max == {:.3f}".format(
 #    y.shape, y.min(), y.max()))
 
 def initialize_single():
+    # if train's already done
+    if os.path.exists('net1.pickle'):
+        with open(r"net1.pickle", "rb") as input_file:
+            net1 = pickle.load(input_file)
+        return net1
+
+    
     net1 = NeuralNet(
         layers=[  # three layers: one hidden layer
             ('input', layers.InputLayer),
@@ -32,12 +41,16 @@ def initialize_single():
         update_momentum=0.9, # momentum
     
         regression=True,  # flag to indicate we're dealing with regression problem
-        max_epochs=200,  # we want to train this many epochs
+        max_epochs=400,  # we want to train this many epochs
         verbose=1,
         )
 
-    X, y = prepare.load()
+    X, y = helper.load()
     net1.fit(X, y)
+
+    with open('net1.pickle', 'wb') as f:
+        pickle.dump(net1, f, -1)
+    
     return net1
 
 def main():
@@ -54,7 +67,7 @@ def main():
     pyplot.yscale("log")
     pyplot.show()
     
-    X, _ = prepare.load(test=True)
+    X, _ = helper.load(test=True)
     y_pred = net1.predict(X)
     
     fig = pyplot.figure(figsize=(6, 6))
@@ -63,7 +76,7 @@ def main():
     
     for i in range(16):
         ax = fig.add_subplot(4, 4, i + 1, xticks=[], yticks=[])
-        prepare.plot_sample(X[i], y_pred[i], ax)
+        helper.plot_sample(X[i], y_pred[i], ax)
     
     pyplot.show()
 
