@@ -14,3 +14,5 @@
 *.arff
 *.jpg
 *.png
+*.pydevproject
+*.project
