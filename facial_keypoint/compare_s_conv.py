@@ -1,5 +1,3 @@
-from facial_keypoint import convolution
-import single
 from facial_keypoint import helper
 from lasagne import layers
 from lasagne.updates import nesterov_momentum
@@ -9,9 +7,15 @@ from facial_keypoint import helper
 import numpy as np
 import cPickle as pickle
 
+import single
+import flip_convolution
+import convolution
+from FlipBatchIterator import FlipBatchIterator
+
 def main():
     net1 = single.initialize_single()
     net2 = convolution.initialize_conv()
+    net3 = flip_convolution.initialize_conv()
     
     # Training this neural net is much more computationally costly than the first one we trained.
     # It takes around 15x as long to train; those 1000 epochs take more than 20 minutes on even a powerful GPU.
