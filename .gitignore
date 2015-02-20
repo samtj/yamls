@@ -11,8 +11,8 @@
 # Eclipse Files $
 .metadata
 .metadata/*
-*.pydevproject
-*.project
+#*.pydevproject
+#*.project
 
 # Data Files #
 *.csv
