@@ -12,6 +12,8 @@ from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
 import numpy as np
 import re
 
+data_path = '../data/movie_sentiment/'
+
 def getwords(doc):
     """docstring for getwords"""
     splitter=re.compile('\\W*')
@@ -38,7 +40,7 @@ def process_csv():
     test_set = []
 
     ##############################TRAIN DATA#####################
-    with open('train.tsv', 'r') as f:
+    with open(data_path + 'train.tsv', 'r') as f:
         sentimentreader = csv.reader(f, delimiter='\t')
         header = sentimentreader.next()
         cnt = 0
@@ -70,7 +72,7 @@ def process_csv():
     #############################TEST DATA##################
     
     # Read test data and predict phrase based on train set
-    with open('test.tsv', 'r') as f:
+    with open(data_path + 'test.tsv', 'r') as f:
         testreader = csv.reader(f, delimiter='\t')
         submission = open('scikit_submission.csv', 'w')
         csvwriter = csv.writer(submission, delimiter=',')
