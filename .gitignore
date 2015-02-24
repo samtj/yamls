@@ -18,6 +18,7 @@
 *.csv
 *.arff
 *.mp4
+*.tsv
 
 # Images #
 *.jpg
