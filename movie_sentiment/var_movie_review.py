@@ -7,6 +7,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import LinearSVC
 from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -16,9 +17,18 @@ from sklearn import svm
 
 import numpy as np
 import re
-#import helper.csvhelper
-#import arff
+import conv.convnet as cn
 from sklearn import cross_validation
+from sklearn_theano.feature_extraction import OverfeatClassifier
+import theano
+from lasagne import layers
+from lasagne.updates import nesterov_momentum
+from nolearn.lasagne import NeuralNet
+from helper.sklearn_api import MaxoutClassifier
+from helper.sklearn_api import Classifier
+from scipy import sparse
+import cPickle as pickle
+import os.path
 
 data_path = '../data/movie_sentiment/'
 
@@ -59,7 +69,6 @@ def process_csv():
     
     sentence_set = [sentence for sentence, label in train_set]
     label_set = [int(label) for sentence, label in train_set]
-
     """
 
     cNamesTr = ['sentence']
@@ -80,10 +89,23 @@ def process_csv():
     """ 
     return sentence_set, label_set
 
-def scikit_test(text_clf):
+
+    text_clf = scikit_learn(sentence_set, label_set)
+    #Predict the test data
+    #predicted = text_clf.predict(test_sentence)
+    #print np.mean(predicted == np.asarray(label_test))
+    #for doc, category in zip(test_sentence, predicted):
+    #    print('%r => %s' % (doc, category))
+    #cl = NaiveBayesClassifier.train(train_set)
+
+    #############################TEST DATA##################
+    
+    # Read test data and predict phrase based on train set
+
+def scikit_test(text_clf):    
     with open(data_path + 'test.tsv', 'r') as f:
         testreader = csv.reader(f, delimiter='\t')
-        submission = open(data_path + 'sam_svc_submission.csv', 'wb')
+        submission = open('sam_pylearn_submission.csv', 'wb')
         csvwriter = csv.writer(submission, delimiter=',')
         csvwriter.writerow(['PhraseId', 'Sentiment'])
         header = testreader.next()
@@ -98,7 +120,13 @@ def scikit_test(text_clf):
             #write_row = [str(phraseid), str(rating)]
             #csvwriter.writerow(write_row)
         
-        predicted = text_clf.predict(np.asarray(phrase_list))
+        #X_train_counts = cv.fit_transform(np.asarray(phrase_list))
+        #X_train_tf = tf.transform(X_train_counts)
+        
+        test_list = np.asarray(phrase_list)
+        print test_list.shape
+        print test_list[0].shape
+        predicted = text_clf.predict(test_list)
         for i in range(len(predicted)):
             sentiment_label = predicted[i]
             phraseid = phraseid_list[i]
@@ -107,42 +135,68 @@ def scikit_test(text_clf):
     return
 
 def scikit_learn(train_set, train_labels, CV):
-    from sklearn.svm import SVC
-    from sklearn.svm import LinearSVC
-
+#    count_vect = CountVectorizer()
+#    X_train_counts = count_vect.fit_transform(np.asarray(train_set))
+#    tf_transformer = TfidfTransformer(use_idf=False).fit(X_train_counts)
+#    X_train_tf = tf_transformer.transform(X_train_counts)
+                                          
+#    clsfr = cn.get_conv(X_train_tf.shape[1], 5)
     text_clf = Pipeline([('vect', CountVectorizer()),
                      ('tfidf', TfidfTransformer()),
-                     ('clf', LinearSVC()),
-#                     ('clf', RandomForestClassifier(n_estimators=10, max_depth=None,min_samples_split=1, random_state=0)),
+                     ('clf', MaxoutClassifier()),
+#                     ('clf', OneVsOneClassifier(LinearSVC())),
                      ])
 
-#                     ('clf', OneVsOneClassifier(RandomForestClassifier())),
-#                     ('clf', RandomForestClassifier(n_estimators=100, max_depth=None,min_samples_split=1, random_state=0)),
-#                     ('clf', svm.SVC(kernel='linear')),
+#                     ('clf', svm.SVC()),
 #                     ('clf', SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, n_iter=5)),
 #                     ('clf', MultinomialNB()),
 #                     ('clf', OneVsOneClassifier(LinearSVC())),
+    
     X = np.asarray(train_set)
     y = np.asarray(train_labels)
+#    X = X_train_tf
+#    y = np.asarray(train_labels)
+    
+#    y = np.zeros((labels.shape[0],5), dtype=np.int)
+    
+#    for i in range(labels.shape[0]):
+#        y[i][labels[i]] = 1
+    
+#    print y.shape
+#    text_clf = OverfeatClassifier()
     
     if CV:
-        kf = cross_validation.KFold(len(X), n_folds=5)
+        kf = cross_validation.KFold(X.shape[0], n_folds=5)
         
         scores = []
         for k, (train, test) in enumerate(kf):
             text_clf.fit(X[train], y[train])
+#            score = text_clf.predict(X[test])
             score = text_clf.score(X[test], y[test])
-            print("[fold {0}], score: {1:.5f}".format(k, score ))
+            print score
+            #print("[fold {0}], score: {1:.5f}".format(k, score ))
             scores.append(score)
     #        scores.append()
         print np.mean(scores)
-        text_clf = text_clf.fit(X, np.asarray(y))
+        text_clf = text_clf.fit(X, y)
     else:
-        text_clf = text_clf.fit(X, np.asarray(y))
+        print X.shape
+        print X[0].shape
+        print y.shape
+        print y[0].shape
+
+        # if train's already done
+        if os.path.exists('pylearn2.pickle'):
+            with open(r"pylearn2.pickle", "rb") as input_file:
+                net2 = pickle.load(input_file)
+                text_clf = net2
+        else:
+            text_clf.fit(X, y)
+            with open('pylearn2.pickle', 'wb') as f:
+                pickle.dump(text_clf, f, -1)
     return text_clf
 
 if __name__ == '__main__':
     train_set, train_label = process_csv()
     text_clf = scikit_learn(train_set, train_label, CV=False)
     scikit_test(text_clf)
-    
